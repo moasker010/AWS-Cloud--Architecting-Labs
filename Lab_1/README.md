@@ -11,7 +11,7 @@ A hands-on project demonstrating the **Principle of Least Privilege** in AWS. Th
 
 * **👤 IAM Users**  
 We have 3 users (`user-1`, `user-2`, `user-3`) already created for us, but they currently have no permissions or group memberships yet.  
-![IAM Users List](Images\iam-users-list.png)
+![IAM Users List](Images/iam-users-list.png)
 
 * **👤IAM Users Groups & Policies**   
 We found 3 groups, each with different permissions. Here is a breakdown of what each group does:
@@ -22,7 +22,7 @@ We found 3 groups, each with different permissions. Here is a breakdown of what 
 | **S3-Support** | Managed Policy | **Read-Only:** Allows getting, listing, and describing resources in Amazon S3, including S3 Object Lambda. | <details><summary><strong>Show Policy</strong></summary><pre><code>{<br>  "Version": "2012-10-17",<br>  "Statement": [<br>    { "Effect": "Allow", "Action": [ "s3:Get*", "s3:List*", "s3:Describe*", "s3-object-lambda:Get*", "s3-object-lambda:List*" ], "Resource": "*" }<br>  ]<br>}</code></pre></details> |
 | **EC2-Admin** | Inline Policy | **Admin/Custom:** Allows viewing, starting, and stopping EC2 instances, but **strictly limited** to `*.nano` and `*.micro` instance types. | <details><summary><strong>Show Policy</strong></summary><pre><code>{<br>  "Version": "2012-10-17",<br>  "Statement": [<br>    { "Condition": { "ForAllValues:StringLikeIfExists": { "ec2:InstanceType": [ "*.nano", "*.micro" ] } }, "Action": [ "ec2:Describe*", "ec2:StartInstances", "ec2:StopInstances" ], "Resource": [ "*" ], "Effect": "Allow" }<br>  ]<br>}</code></pre></details> |
 
-![IAM Groups List](Images\iam-groups-list.png)
+![IAM Groups List](Images/iam-groups-list.png)
 
 * **🎯 The Target Mapping & Final Goal**
 

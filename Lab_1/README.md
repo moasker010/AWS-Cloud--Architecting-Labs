@@ -47,7 +47,12 @@ We found 3 groups, each with different permissions. Here is a breakdown of what 
 * **Adding user-3:**  
   `IAM Dashboard` ➡️ `User groups` ➡️ `EC2-Admin` ➡️ `Users tab` ➡️ `Add users` ➡️ `Select user-3` ➡️ `Add users`
 
-
+  
+> 💡 **Permission Inheritance Concept:** 
+> Since we assigned the users to specific groups, they automatically inherit the permissions from the policies attached to those groups. 
+> 
+> **How it works:**
+> `📄 IAM Policy` ➔ *(Attached to)* ➔ `👥 IAM Group` ➔ *(Inherited by)* ➔ `👤 IAM User`
 ## 🪜Task 3: Sign in and test user permissions
 
 

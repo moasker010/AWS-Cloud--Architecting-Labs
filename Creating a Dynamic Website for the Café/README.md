@@ -774,7 +774,7 @@ Wait until the copied AMI becomes:
 ```text
 Available
 ```
-
+![VS Code IDE Interface](Images/AMIOregon.png)
 ---
 
 ## 8. Launch Production EC2
@@ -827,7 +827,7 @@ Copy the:
 ```text
 Public IPv4 DNS
 ```
-
+![VS Code IDE Interface](Images/NewInstance.png)
 ---
 
 ## 10. Configure Production Secrets
@@ -845,13 +845,13 @@ Change the Region:
 ```text
 region="us-west-2"
 ```
-
+![VS Code IDE Interface](Images/us-west-2.png)
 Change the Production DNS:
 
 ```text
 publicDNS="<Public-DNS-of-ProdCafeServer>"
 ```
-
+![VS Code IDE Interface](Images/PublicDNS.png)
 Save the file.
 
 ---
@@ -952,19 +952,6 @@ us-west-2
 ProdCafeServer
 ```
 
-### Development
-
-```text
-Region: us-east-1
-Instance: Lab IDE
-```
-
-### Production
-
-```text
-Region: us-west-2
-Instance: ProdCafeServer
-```
 
 ### AWS Services
 

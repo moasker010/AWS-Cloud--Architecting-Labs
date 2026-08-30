@@ -17,7 +17,7 @@ Deploy a managed MySQL database using Amazon RDS and securely connect an existin
 ## 🏗️ Architecture
 The web application runs on an EC2 instance in a public subnet and communicates securely with the Amazon RDS database located in a private subnet.
 
-![Architecture Diagram](Images/image_b9ba66_2.png)
+![Architecture Diagram](Images/image_b9ba66.png)
 
 ## 🪜 Steps
 

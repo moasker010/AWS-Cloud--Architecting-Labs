@@ -18,7 +18,7 @@ Automating EC2 instance backups, managing snapshot retention lifecycles, and con
 * **Amazon VPC** — Isolated networking environment.
 
 ## 🏗️ Architecture
-*(Waiting for architecture details...)*
+Internet ➔ Internet Gateway (IGW) ➔ VPC ➔ Route Table ➔ Public Subnet ➔ EC2 (Web Server) ➔ EBS Volume ➔ DLM (Automated Snapshots) ➔ Cross-Region Copy (DR)
 
 ## 🪜 Steps
 
@@ -195,7 +195,7 @@ To tell DLM exactly which volumes to back up, we apply a specific tag to our EC2
 We navigated to EC2 -> Lifecycle Manager to create a new policy. A DLM policy acts as an automated backup plan, targeting resources based on tags and running according to a defined schedule.
 
 **Schedule Configuration:**
-We named the schedule `DLM-Backup-Schedule` (best practice for production over the default "Schedule 1"). AWS DLM supports various execution frequencies. For this lab, we selected **Daily (Every 12 Hours)** starting at `09:00 UTC` to observe the lifecycle in action quickly.
+We named the schedule `DLM-Backup-Schedule` (best practice for production over the default "Schedule 1"). AWS DLM supports various execution frequencies. For this lab, we selected **Daily (Every 12 Hours)** starting at `02:00 UTC`. 
 
 | Frequency Options | Description | Visual Reference |
 | :--- | :--- | :--- |
@@ -221,15 +221,56 @@ Below the schedule, DLM offers advanced configurations for the generated snapsho
 | **Tagging** | Add `CreatedBy=DLM` | Differentiates the tag used to *find* the volume from the tag *applied* to the resulting snapshot. | ![Advanced Tagging](Images/AdvTagging.png) |
 | **Snapshot archiving** | Disabled ❌ | Archiving is for long-term storage. AWS restricts this to monthly/yearly schedules or crons ≥ 28 days. | ![Advanced Settings](Images/Add-2.png) |
 | **Fast snapshot restore** | Disabled ❌ | Accelerates performance restoration in specific AZs but incurs significant hourly costs. | ![Advanced Settings](Images/Add-2.png) |
-| **Cross-Region copy** | (Pending configuration) | We will configure this critical Disaster Recovery feature in the next step before creating the policy. | ![Advanced Settings](Images/Add-2.png) |
+| **Cross-Region copy** | (See step 13) | We configure this separately to handle Disaster Recovery. | ![Advanced Settings](Images/Add-2.png) |
 
-## ⚠️ Key Notes
-* **VPC Isolation & Public Subnets:** A newly created VPC is completely isolated. Furthermore, naming a subnet "Public" does not make it public. A subnet is only truly public when it is explicitly associated with a Route Table that has a route (`0.0.0.0/0`) pointing to an attached Internet Gateway.
-* **Storage Hierarchy (EBS vs. Snapshot vs. DLM):** It is critical to understand the distinction between these components:
-  * **EBS Volume:** The live block storage acting as the hard drive for the EC2 instance.
-  * **Snapshot:** A static, point-in-time backup of the EBS volume data.
-  * **DLM:** The automation engine that manages the scheduling, creation, and retention lifecycles of these snapshots.
-* **DLM Execution Window (UTC):** The `Starting at` time is strictly in **UTC**, not local time. Furthermore, DLM does not guarantee execution at the exact minute specified; the snapshot process will initiate within a **one-hour window** following the scheduled time.
+**13. Configure Cross-Region Copy & Create Policy**
+To establish a true Disaster Recovery (DR) scenario, we enabled **Cross-Region copy** within the advanced settings before saving the policy. This ensures that every time DLM takes a snapshot in our primary region (`us-east-1`), a secure copy is immediately replicated to a secondary region. If the primary region fails, we can recover our server from the secondary region.
+
+| Setting | Value | Reason |
+| :--- | :--- | :--- |
+| **Enable cross-Region copy** | Checked ✅ | Activates automatic snapshot replication to another AWS Region. |
+| **Target Region** | `us-west-2` (Example) | The designated Disaster Recovery (DR) location. |
+| **Expire** | `1 days` | A short retention for the copied snapshot to prevent unnecessary lab storage costs. |
+| **Encryption** | Enabled ✅ | Secures the copy using the default AWS EBS KMS key in the target region. |
+| **Copy tags from source** | Checked ✅ | Ensures the tags from the original snapshot are carried over to the DR replica. |
+
+![Cross Region Copy Settings](Images/Cross-Region-Copy.png)
+
+| Setting | Value | Reason |
+| :--- | :--- | :--- |
+| **Cross-account sharing** | Disabled ❌ | We are keeping the replication strictly within our own AWS account. |
+
+![Cross Account Sharing Settings](Images/Cross-Account.png)
+
+After verifying all schedule, retention, and cross-region configurations, we clicked **Create policy**.
+![Review Policy Settings](Images/Review-Poli.png)
+
+**14. Verify the DLM Policy**
+We navigated back to the Lifecycle Manager dashboard to confirm the setup was successful. The newly created `DLM-Backup-Schedule` policy state showed as **Enabled**. 
+
+![Lifecycle Manager Dashboard](Images/MyDLM_2.png)
+
+**15. Monitor Snapshot Creation & The Execution Window**
+We scheduled the policy for `02:00 UTC` (which equals `05:00 AM` local time). However, when checking the Snapshots dashboard exactly at 5:00 AM, the automated snapshot did not appear instantly—only our initial `Manual baseline snapshot before DLM` was present.
+
+![Snapshots Dashboard showing only manual backup](Images/image_f19227.png)
+
+After waiting a short while, the automated snapshot successfully appeared. As seen in the snapshot details below, the creation process actually started at `05:29 AM` local time. 
+
+![Automated Snapshot Appeared](Images/AutoSnap-Apper.png)
+
+Execution Timing Delays: DLM does not guarantee snapshot creation at the exact minute specified (e.g., exactly at 02:00). Instead, the backup process will automatically initiate within a one-hour window following the scheduled time. Therefore, waiting up to an hour is standard practice.
+
+*Reasoning:* This perfectly demonstrates the **DLM Execution Window**. DLM does not guarantee snapshot creation at the exact minute specified. Instead, it initiates the backup process randomly within a **one-hour window** following the scheduled time. Seeing this delay is completely normal and expected behavior.
+
+**16. Verify Cross-Region Snapshot Copy (DR Validation)**
+To validate our Disaster Recovery (DR) setup, we switched our AWS console context to the target secondary region (`us-east-2`). As expected, the automated snapshot created in our primary region was successfully replicated.
+
+The snapshot description explicitly states it was copied from the original volume in `us-east-1` by our `DLM-Backup-Schedule` policy. This confirms that if our primary region experiences an outage, we have a secure, encrypted backup ready for immediate restoration in a completely different geographical location.
+
+![Copied Snapshot in Secondary Region](Images/AutoSnap-SecRegon.png)
+
+
 
 ## ✅ Outcome
-*(Waiting for lab completion...)*
+Successfully built a custom VPC, deployed an EC2 web server, and implemented an automated, cross-region backup strategy using AWS Data Lifecycle Manager (DLM). The automated DLM policy successfully triggered within its execution window, creating a snapshot and replicating it to a secondary region. The lab is now complete, demonstrating a fully automated disaster recovery backup solution without manual intervention.
